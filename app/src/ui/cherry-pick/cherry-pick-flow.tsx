@@ -12,6 +12,7 @@ interface ICherryPickFlowProps {
   readonly repository: Repository
   readonly dispatcher: Dispatcher
   readonly step: CherryPickFlowStep
+  readonly revisionRange: string
 
   readonly onDismissed: () => void
 }
@@ -25,6 +26,17 @@ export class CherryPickFlow extends React.Component<ICherryPickFlowProps> {
   private onCherryPick(targetBranch: Branch) {
     // TODO: call this.props.dispatcher.cherryPick
     this.props.onDismissed()
+  }
+
+  private willCherryPickHaveConflicts = async (
+    targetBranch: Branch
+  ): Promise<boolean> => {
+    return await this.props.dispatcher.willCherryPickHaveConflicts(
+      this.props.repository,
+      this.props.step.currentBranch,
+      targetBranch,
+      this.props.revisionRange
+    )
   }
 
   public render() {
@@ -47,6 +59,7 @@ export class CherryPickFlow extends React.Component<ICherryPickFlowProps> {
             currentBranch={currentBranch}
             onCherryPick={this.onCherryPick}
             onDismissed={this.onFlowEnded}
+            willCherryPickHaveConflicts={this.willCherryPickHaveConflicts}
           />
         )
       }

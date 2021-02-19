@@ -2528,4 +2528,21 @@ export class Dispatcher {
   ): Promise<void> {
     return this.appStore._setCherryPickFlowStep(repository, step)
   }
+
+  /**
+   * will determine if cherry pick will result in conflicts
+   */
+  public willCherryPickHaveConflicts(
+    repository: Repository,
+    currentBranch: Branch,
+    targetBranch: Branch,
+    revisionRange: string
+  ): Promise<boolean> {
+    return this.appStore.willCherryPickHaveConflicts(
+      repository,
+      currentBranch,
+      targetBranch,
+      revisionRange
+    )
+  }
 }

@@ -150,6 +150,7 @@ import {
   deleteLocalBranch,
   deleteRemoteBranch,
   fastForwardBranches,
+  getStatus,
 } from '../git'
 import {
   installGlobalLFSFilters,
@@ -267,6 +268,7 @@ import {
   setShowSideBySideDiff,
 } from '../../ui/lib/diff-mode'
 import { CherryPickFlowStep } from '../../models/cherry-pick'
+import { willCherryPickHaveConflicts } from '../git/cherry-pick'
 
 const LastSelectedRepositoryIDKey = 'last-selected-repository-id'
 
@@ -5693,6 +5695,39 @@ export class AppStore extends TypedBaseStore<IAppState> {
     }))
 
     this.emitUpdate()
+  }
+
+  /** This shouldn't be called directly. See `Dispatcher`. */
+  public async willCherryPickHaveConflicts(
+    repository: Repository,
+    currentBranch: Branch,
+    targetBranch: Branch,
+    revisionRange: string
+  ): Promise<boolean> {
+    return this.withAuthenticatingUser(repository, async (r, account) => {
+      const gitStore = this.gitStoreCache.get(r)
+
+      await gitStore.performFailableOperation(() =>
+        checkoutBranch(r, account, targetBranch)
+      )
+
+      const hasConflicts = await gitStore.performFailableOperation(() =>
+        willCherryPickHaveConflicts(repository, revisionRange)
+      )
+
+      const status = await getStatus(repository)
+      if (status !== null && status.workingDirectory.files.length > 0) {
+        await this._discardChanges(repository, status.workingDirectory.files)
+      }
+
+      await gitStore.performFailableOperation(() =>
+        checkoutBranch(r, account, currentBranch)
+      )
+
+      await this._refreshRepository(repository)
+
+      return hasConflicts === true
+    })
   }
 }
 

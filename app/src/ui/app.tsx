@@ -2005,6 +2005,7 @@ export class App extends React.Component<IAppProps, IAppState> {
             key="cherry-pick-flow"
             repository={popup.repository}
             dispatcher={this.props.dispatcher}
+            revisionRange={popup.commitSha}
             onDismissed={onPopupDismissedFn}
             step={cherryPickState.step}
           />

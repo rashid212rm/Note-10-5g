@@ -1,5 +1,6 @@
 import { Branch } from './branch'
 import { CommitOneLine } from './commit'
+import { ComputedAction } from './computed-action'
 import { ICherryPickProgress } from './progress'
 
 /** Represents a snapshot of the cherry pick state from the Git repository  */
@@ -32,3 +33,20 @@ export type ChooseTargetBranchesStep = {
   readonly allBranches: ReadonlyArray<Branch>
   readonly recentBranches: ReadonlyArray<Branch>
 }
+
+export type Clean = {
+  readonly kind: ComputedAction.Clean
+}
+
+export type CherryPickWithConflicts = {
+  readonly kind: ComputedAction.Conflicts
+}
+
+export type CherryPickLoading = {
+  readonly kind: ComputedAction.Loading
+}
+
+export type CherryPickPreview =
+  | Clean
+  | CherryPickWithConflicts
+  | CherryPickLoading

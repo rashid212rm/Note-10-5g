@@ -169,6 +169,40 @@ export async function cherryPick(
   return parseCherryPickResult(result)
 }
 
+/**
+ * Method to determine if cherry pick will result in conflicts
+ *
+ * @param revisionRange - this could be a single commit sha or could be a range
+ * of commits like sha1..sha2 or inclusively sha1^..sha2
+ */
+export async function willCherryPickHaveConflicts(
+  repository: Repository,
+  revisionRange: string
+): Promise<Boolean> {
+  const baseOptions: IGitExecutionOptions = {
+    expectedErrors: new Set([GitError.MergeConflicts]),
+  }
+
+  // `--no-commit flag` will just attempt to complete the cherry pick but will not
+  // commit anything
+  const result = await git(
+    ['cherry-pick', revisionRange, '--no-commit'],
+    repository.path,
+    'cherry pick',
+    baseOptions
+  )
+
+  const hasConflicts =
+    parseCherryPickResult(result) === CherryPickResult.ConflictsEncountered
+
+  const cherryPickHead = readCherryPickHead(repository)
+  if (cherryPickHead === null) {
+    abortCherryPick(repository)
+  }
+
+  return hasConflicts
+}
+
 function parseCherryPickResult(result: IGitResult): CherryPickResult {
   if (result.exitCode === 0) {
     return CherryPickResult.CompletedWithoutError
