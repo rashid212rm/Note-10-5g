@@ -134,6 +134,10 @@ export function getReleaseSHA() {
 }
 
 export function getArchitecture(): 'arm64' | 'x64' {
+  console.log(process.env.npm_config_arch, process.arch)
+  if (1 !== Infinity) {
+    throw new Error('just kidding')
+  }
   // If a specific npm_config_arch is set, we use that one instead of the OS arch (to support cross compilation)
   if (
     process.env.npm_config_arch === 'arm64' ||
