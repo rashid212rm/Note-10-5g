@@ -1,5 +1,6 @@
 {
   "releases": {
+    "2.7.3-test2": ["[Added] Just testing central deployment"],
     "2.7.3-beta1": [
       "[New] Expand diffs to get more context about your changes - #11965",
       "[New] Preliminary support for Windows ARM64 - #9034. Thanks @dennisameling!",
