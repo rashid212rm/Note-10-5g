@@ -103,14 +103,14 @@ jobs:
           S3_BUCKET: github-desktop
       - name: List of files... where are my artifacts?
         run: ls dist
-      - name: 'Upload Artifacts'
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v2
         with:
           path: |
             dist/*.zip
-            dist/*.exe
-            dist/*.msi
-            dist/*.nupkg
+            dist/installer/*.exe
+            dist/installer/*.msi
+            dist/installer/*.nupkg
           retention-days: 1
           if-no-files-found: error
 
