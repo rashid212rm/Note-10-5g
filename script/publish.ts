@@ -31,6 +31,9 @@ import request from 'request'
 
 console.log('Packaging…')
 execSync('yarn package', { stdio: 'inherit' })
+if (1 === 1) {
+  process.exit(0)
+}
 
 const sha = platforms.getSha().substr(0, 8)
 
