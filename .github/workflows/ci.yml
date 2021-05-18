@@ -111,9 +111,7 @@ jobs:
   create-release:
     name: Create Release
     needs: build
-    if:
-      ${{ startsWith(github.ref, 'refs/tags/') && contains(github.ref,
-      '__release-test') }}
+    if: ${{ contains(github.ref, '__release-test') }}
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
@@ -131,5 +129,5 @@ jobs:
             steps.package-version.outputs.current-version) }}
           draft: true
           prerelease:
-            ${{ startsWith(github.ref, 'refs/tags/') && (contains(github.ref,
-            '__release-beta') || contains(github.ref, '__release-test') }}
+            ${{ contains(github.ref, '__release-beta') || contains(github.ref,
+            '__release-test' }}
