@@ -106,7 +106,11 @@ jobs:
       - name: 'Upload Artifacts'
         uses: actions/upload-artifact@v2
         with:
-          path: dist/*.{zip,exe,msi,nupkg}
+          path: |
+            dist/*.zip
+            dist/*.exe
+            dist/*.msi
+            dist/*.nupkg
           retention-days: 1
           if-no-files-found: error
 
