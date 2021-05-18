@@ -125,7 +125,7 @@ jobs:
         with:
           files: artifacts/*
           name:
-            ${{ format("GitHub Desktop {0}",
+            ${{ format('GitHub Desktop {0}',
             steps.package-version.outputs.current-version) }}
           draft: true
           prerelease:
