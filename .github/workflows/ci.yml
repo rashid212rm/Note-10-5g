@@ -130,4 +130,4 @@ jobs:
           draft: true
           prerelease:
             ${{ contains(github.ref, '__release-beta') || contains(github.ref,
-            '__release-test' }}
+            '__release-test') }}
