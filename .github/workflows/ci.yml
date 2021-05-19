@@ -124,19 +124,19 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           path: artifacts
-      - name: Get the app version
-        id: package-version
-        uses: martinbeentjes/npm-get-version-action@master
-        with:
-          path: app
+      # - name: Get the app version
+      #   id: package-version
+      #   uses: martinbeentjes/npm-get-version-action@master
+      #   with:
+      #     path: app
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.package-version.outputs.current-version }}
+          tag_name: 2.8.2-test99 # ${{ steps.package-version.outputs.current-version }}
           files: artifacts/*
           name:
-            ${{ format('GitHub Desktop {0}',
-            steps.package-version.outputs.current-version) }}
+            ${{ format('GitHub Desktop {0}', '2.8.2-test99') }}
+            # steps.package-version.outputs.current-version) }}
           draft: true
           prerelease:
             ${{ contains(github.ref, '__release-beta') || contains(github.ref,
