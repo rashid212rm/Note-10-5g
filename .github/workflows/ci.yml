@@ -141,3 +141,5 @@ jobs:
           prerelease:
             ${{ contains(github.ref, '__release-beta') || contains(github.ref,
             '__release-test') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.DESKTOPBOT_TOKEN }}
