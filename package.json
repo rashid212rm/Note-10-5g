@@ -42,6 +42,7 @@
     "draft-release": "ts-node -P script/tsconfig.json script/draft-release/index.ts",
     "draft-release:format": "prettier --check --write changelog.json app/package.json && yarn validate-changelog",
     "validate-changelog": "ts-node -P script/tsconfig.json script/validate-changelog.ts",
+    "generate-release-notes:markdown": "ts-node -P script/tsconfig.json script/generate-release-notes-markdown.ts",
     "check-modified": "stop-build"
   },
   "author": {
