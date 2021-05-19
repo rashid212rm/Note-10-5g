@@ -127,6 +127,8 @@ jobs:
       - name: Get the app version
         id: package-version
         uses: martinbeentjes/npm-get-version-action@master
+        with:
+          path: app/package.json
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
