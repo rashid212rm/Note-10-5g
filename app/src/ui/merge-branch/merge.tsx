@@ -6,12 +6,7 @@ import { Dispatcher } from '../dispatcher'
 import { Branch } from '../../models/branch'
 import { Repository } from '../../models/repository'
 
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  OkCancelButtonGroup,
-} from '../dialog'
+import { Dialog, DialogContent, DialogFooter } from '../dialog'
 import { BranchList, IBranchListItem, renderDefaultBranch } from '../branches'
 import { revSymmetricDifference } from '../../lib/git'
 import { IMatches } from '../../lib/fuzzy-find'
@@ -21,6 +16,8 @@ import { ActionStatusIcon } from '../lib/action-status-icon'
 import { promiseWithMinimumTimeout } from '../../lib/promise'
 import { truncateWithEllipsis } from '../../lib/truncate-with-ellipsis'
 import { ClickSource } from '../lib/list'
+import { Button } from '../lib/button'
+import { Octicon, OcticonSymbol } from '../octicons'
 
 interface IMergeProps {
   readonly dispatcher: Dispatcher
@@ -74,6 +71,10 @@ interface IMergeState {
 
   /** The filter text to use in the branch selector */
   readonly filterText: string
+
+  /** State properties for the split button */
+  readonly showButtonOptions: boolean
+  readonly isMergeOption: boolean
 }
 
 /** A component for merging a branch into the current branch. */
@@ -88,6 +89,8 @@ export class Merge extends React.Component<IMergeProps, IMergeState> {
       commitCount: undefined,
       filterText: '',
       mergeStatus: null,
+      showButtonOptions: false,
+      isMergeOption: true,
     }
   }
 
@@ -272,6 +275,86 @@ export class Merge extends React.Component<IMergeProps, IMergeState> {
     )
   }
 
+  private onSelecteMerge = (isMergeOption: boolean) => {
+    return () => {
+      this.setState({
+        showButtonOptions: false,
+        isMergeOption: isMergeOption,
+      })
+    }
+  }
+
+  private renderSplitButtonOptions() {
+    if (!this.state.showButtonOptions) {
+      return
+    }
+
+    const selectedBranch = this.state.selectedBranch
+    const currentBranch = this.props.currentBranch
+    return (
+      <div className="split-button-options">
+        <ul>
+          <li onClick={this.onSelecteMerge(true)}>
+            {this.state.isMergeOption ? (
+              <Octicon
+                className="selected-option-indicator"
+                symbol={OcticonSymbol.check}
+              />
+            ) : null}
+            <div className="option-title">Create a merge commit</div>
+            <div className="option-description">
+              All commits from{' '}
+              <strong>
+                {selectedBranch ? selectedBranch.name : 'this branch'}
+              </strong>{' '}
+              will be added to{' '}
+              <strong>
+                {currentBranch ? currentBranch.name : 'the base branch'}
+              </strong>{' '}
+              via a merge commit.
+            </div>
+          </li>
+          <li onClick={this.onSelecteMerge(false)}>
+            {!this.state.isMergeOption ? (
+              <Octicon
+                className="selected-option-indicator"
+                symbol={OcticonSymbol.check}
+              />
+            ) : null}
+            <div className="option-title">Squash and Merge</div>
+            <div className="option-description">
+              The commits in{' '}
+              <strong>
+                {selectedBranch ? selectedBranch.name : 'this branch'}
+              </strong>{' '}
+              will be combined into one commit in{' '}
+              <strong>
+                {currentBranch ? currentBranch.name : 'the base branch'}
+              </strong>
+              .
+            </div>
+          </li>
+        </ul>
+      </div>
+    )
+  }
+
+  private renderSelectedOption() {
+    const selectedBranch = this.state.selectedBranch
+    const currentBranch = this.props.currentBranch
+    return (
+      <>
+        {!this.state.isMergeOption ? 'Squash and ' : null}Merge{' '}
+        <strong>{selectedBranch ? selectedBranch.name : ''}</strong> into{' '}
+        <strong>{currentBranch ? currentBranch.name : ''}</strong>
+      </>
+    )
+  }
+
+  private openSplitButtonDropdown = () => {
+    this.setState({ showButtonOptions: !this.state.showButtonOptions })
+  }
+
   public render() {
     const selectedBranch = this.state.selectedBranch
     const currentBranch = this.props.currentBranch
@@ -310,17 +393,20 @@ export class Merge extends React.Component<IMergeProps, IMergeState> {
         </DialogContent>
         <DialogFooter>
           {this.renderMergeInfo()}
-          <OkCancelButtonGroup
-            okButtonText={
-              <>
-                Merge{' '}
-                <strong>{selectedBranch ? selectedBranch.name : ''}</strong>{' '}
-                into <strong>{currentBranch ? currentBranch.name : ''}</strong>
-              </>
-            }
-            okButtonDisabled={disabled}
-            cancelButtonVisible={false}
-          />
+          <div className="split-button">
+            <Button disabled={disabled} type="submit">
+              {this.renderSelectedOption()}
+            </Button>
+            <Button
+              disabled={disabled}
+              className="dropdown-button"
+              onClick={this.openSplitButtonDropdown}
+              type="button"
+            >
+              <Octicon symbol={OcticonSymbol.triangleDown} />
+            </Button>
+            {this.renderSplitButtonOptions()}
+          </div>
         </DialogFooter>
       </Dialog>
     )
