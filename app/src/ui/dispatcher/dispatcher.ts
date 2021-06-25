@@ -106,7 +106,6 @@ import { resolveWithin } from '../../lib/path'
 import {
   CherryPickFlowStep,
   CherryPickStepKind,
-  CreateBranchStep,
 } from '../../models/cherry-pick'
 import { CherryPickResult } from '../../lib/git/cherry-pick'
 import { sleep } from '../../lib/promise'
@@ -115,6 +114,7 @@ import { findDefaultUpstreamBranch } from '../../lib/branch'
 import { ILastThankYou } from '../../models/last-thank-you'
 import { dragAndDropManager } from '../../lib/drag-and-drop-manager'
 import {
+  CreateBranchStep,
   MultiCommitOperationDetail,
   MultiCommitOperationKind,
   MultiCommitOperationStep,
@@ -2666,15 +2666,6 @@ export class Dispatcher {
     return this.appStore._setCherryPickFlowStep(repository, step)
   }
 
-  /** Initialize and start the cherry pick operation */
-  public async initializeCherryPickFlow(
-    repository: Repository,
-    commits: ReadonlyArray<CommitOneLine>
-  ): Promise<void> {
-    this.appStore._initializeCherryPickProgress(repository, commits)
-    this.switchCherryPickingFlowToShowProgress(repository)
-  }
-
   private logHowToRevertCherryPick(
     targetBranchName: string,
     beforeSha: string | null
@@ -2696,7 +2687,8 @@ export class Dispatcher {
     commits: ReadonlyArray<CommitOneLine>,
     sourceBranch: Branch | null
   ): Promise<void> {
-    this.initializeCherryPickFlow(repository, commits)
+    this.appStore._initializeCherryPickProgress(repository, commits)
+    this.switchMultiCommitOperationToShowProgress(repository)
     this.markDragAndDropIntroAsSeen(DragAndDropIntroType.CherryPick)
 
     const retry: RetryAction = {
@@ -2713,7 +2705,13 @@ export class Dispatcher {
     }
 
     const { tip } = targetBranch
-    this.appStore._setCherryPickTargetBranchUndoSha(repository, tip.sha)
+    this.repositoryStateManager.updateMultiCommitOperationUndoState(
+      repository,
+      () => ({
+        undoSha: tip.sha,
+        branchName: targetBranch.name,
+      })
+    )
 
     if (commits.length > 1) {
       this.statsStore.recordCherryPickMultipleCommits()
@@ -2822,11 +2820,20 @@ export class Dispatcher {
     const sourceBranch = tip.branch
     const { commits } = dragData
 
-    this.showPopup({
-      type: PopupType.CherryPick,
+    this.initializeMultiCommitOperation(
       repository,
-      commits,
-      sourceBranch,
+      {
+        kind: MultiCommitOperationKind.CherryPick,
+        sourceBranch: null,
+        branchCreated: false,
+      },
+      targetBranch,
+      commits
+    )
+
+    this.showPopup({
+      type: PopupType.MultiCommitOperation,
+      repository,
     })
 
     this.statsStore.recordCherryPickViaDragAndDrop()
@@ -3113,7 +3120,9 @@ export class Dispatcher {
   /** Set Cherry Pick Flow Step For Create Branch */
   public async setCherryPickCreateBranchFlowStep(
     repository: Repository,
-    targetBranchName: string
+    targetBranchName: string,
+    commits: ReadonlyArray<Commit>,
+    sourceBranch: Branch | null
   ): Promise<void> {
     const { branchesState } = this.repositoryStateManager.get(repository)
     const { defaultBranch, allBranches, tip } = branchesState
@@ -3136,8 +3145,19 @@ export class Dispatcher {
         )
       : null
 
+    this.initializeMultiCommitOperation(
+      repository,
+      {
+        kind: MultiCommitOperationKind.CherryPick,
+        sourceBranch,
+        branchCreated: true,
+      },
+      null,
+      commits
+    )
+
     const step: CreateBranchStep = {
-      kind: CherryPickStepKind.CreateBranch,
+      kind: MultiCommitOperationStepKind.CreateBranch,
       allBranches,
       defaultBranch,
       upstreamDefaultBranch,
@@ -3146,7 +3166,7 @@ export class Dispatcher {
       targetBranchName,
     }
 
-    return this.appStore._setCherryPickFlowStep(repository, step)
+    return this.appStore._setMultiCommitOperationStep(repository, step)
   }
 
   /** Set cherry-pick branch created state */
@@ -3373,8 +3393,8 @@ export class Dispatcher {
   public initializeMultiCommitOperation(
     repository: Repository,
     operationDetail: MultiCommitOperationDetail,
-    targetBranch: Branch,
-    commits: ReadonlyArray<Commit>
+    targetBranch: Branch | null,
+    commits: ReadonlyArray<Commit | CommitOneLine>
   ) {
     this.appStore._initializeMultiCommitOperation(
       repository,
@@ -3611,7 +3631,10 @@ export class Dispatcher {
       type: BannerType.ConflictsFound,
       operationDescription,
       onOpenConflictsDialog: async () => {
-        const { changesState } = this.repositoryStateManager.get(repository)
+        const {
+          changesState,
+          multiCommitOperationState,
+        } = this.repositoryStateManager.get(repository)
         const { conflictState } = changesState
 
         if (conflictState == null) {
@@ -3621,9 +3644,16 @@ export class Dispatcher {
           return
         }
 
-        // TODO: make this multi commit friendly -> This is isn't necessary to function
-        // but progress will be more accurate when implemented
-        // await this.setCherryPickProgressFromState(repository)
+        if (
+          multiCommitOperationState !== null &&
+          multiCommitOperationState.operationDetail.kind ===
+            MultiCommitOperationKind.CherryPick
+        ) {
+          // TODO: expanded to other types - not functionally necessary; makes
+          // progress dialog more accurate; likely only regular rebase has the
+          // state data to also do this; need to evaluate it's importance
+          await this.setCherryPickProgressFromState(repository)
+        }
 
         const { manualResolutions } = conflictState
 

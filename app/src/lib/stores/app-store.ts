@@ -2128,7 +2128,12 @@ export class AppStore extends TypedBaseStore<IAppState> {
         await this.showRebaseConflictsDialog(repository, conflictState)
       }
     } else if (isCherryPickConflictState(conflictState)) {
-      await this.showCherryPickConflictsDialog(repository, conflictState)
+      await this.showCherryPickConflictsDialog(
+        repository,
+        conflictState,
+        multiCommitOperationState,
+        branchesState.tip
+      )
     } else {
       assertNever(conflictState, `Unsupported conflict kind`)
     }
@@ -6189,17 +6194,20 @@ export class AppStore extends TypedBaseStore<IAppState> {
       )
     }
 
-    this.repositoryStateCache.updateCherryPickState(repository, () => {
-      return {
-        progress: {
-          kind: 'cherryPick',
-          value: 0,
-          position: 1,
-          totalCommitCount: commits.length,
-          currentCommitSummary: commits[commits.length - 1].summary,
-        },
+    this.repositoryStateCache.updateMultiCommitOperationState(
+      repository,
+      () => {
+        return {
+          progress: {
+            kind: 'multiCommitOperation',
+            value: 0,
+            position: 1,
+            totalCommitCount: commits.length,
+            currentCommitSummary: commits[commits.length - 1].summary,
+          },
+        }
       }
-    })
+    )
 
     this.emitUpdate()
   }
@@ -6378,42 +6386,21 @@ export class AppStore extends TypedBaseStore<IAppState> {
       return
     }
 
-    const { progress, targetBranchUndoSha } = snapshot
-
-    this.repositoryStateCache.updateCherryPickState(repository, () => ({
-      progress,
-      targetBranchUndoSha,
-    }))
+    this.repositoryStateCache.updateMultiCommitOperationState(
+      repository,
+      () => ({
+        progress: snapshot.progress,
+      })
+    )
   }
 
   /** display the cherry pick flow, if not already in this flow */
   private async showCherryPickConflictsDialog(
     repository: Repository,
-    conflictState: CherryPickConflictState
+    conflictState: CherryPickConflictState,
+    multiCommitOperationState: IMultiCommitOperationState | null,
+    tip: Tip
   ) {
-    const alreadyInFlow =
-      this.currentPopup !== null &&
-      this.currentPopup.type === PopupType.CherryPick
-
-    if (alreadyInFlow) {
-      return
-    }
-
-    const displayingBanner =
-      this.currentBanner !== null &&
-      this.currentBanner.type === BannerType.CherryPickConflictsFound
-
-    if (displayingBanner) {
-      return
-    }
-
-    await this._setCherryPickProgressFromState(repository)
-
-    this._setCherryPickFlowStep(repository, {
-      kind: CherryPickStepKind.ShowConflicts,
-      conflictState,
-    })
-
     const snapshot = await getCherryPickSnapshot(repository)
 
     if (snapshot === null) {
@@ -6423,11 +6410,84 @@ export class AppStore extends TypedBaseStore<IAppState> {
       return
     }
 
+    if (multiCommitOperationState === null && tip.kind === TipState.Valid) {
+      // This is only true is we get here when opening the app and therefore we
+      // don't know some of this data
+      this._initializeMultiCommitOperation(
+        repository,
+        {
+          kind: MultiCommitOperationKind.CherryPick,
+          sourceBranch: null,
+          branchCreated: false,
+        },
+        tip.branch,
+        snapshot.commits
+      )
+
+      this.repositoryStateCache.updateMultiCommitOperationUndoState(
+        repository,
+        () => ({
+          undoSha: snapshot.targetBranchUndoSha,
+          branchName: '',
+        })
+      )
+
+      this.repositoryStateCache.updateMultiCommitOperationState(
+        repository,
+        () => ({
+          progress: snapshot.progress,
+        })
+      )
+    }
+
+    // are we already in the conflicts flow?
+    const alreadyInFlow =
+      this.currentPopup !== null &&
+      this.currentPopup.type === PopupType.MultiCommitOperation &&
+      multiCommitOperationState !== null &&
+      (multiCommitOperationState.step.kind ===
+        MultiCommitOperationStepKind.ShowConflicts ||
+        multiCommitOperationState.step.kind ===
+          MultiCommitOperationStepKind.ConfirmAbort)
+
+    // have we already been shown the merge conflicts flow *and closed it*?
+    const alreadyExitedFlow =
+      this.currentBanner !== null &&
+      this.currentBanner.type === BannerType.ConflictsFound
+
+    const displayingBanner =
+      this.currentBanner !== null &&
+      this.currentBanner.type === BannerType.CherryPickConflictsFound
+
+    if (alreadyInFlow || alreadyExitedFlow || displayingBanner) {
+      return
+    }
+
+    let theirBranch = undefined
+
+    if (
+      multiCommitOperationState !== null &&
+      multiCommitOperationState.operationDetail.kind ===
+        MultiCommitOperationKind.CherryPick &&
+      multiCommitOperationState.operationDetail.sourceBranch !== null
+    ) {
+      theirBranch = multiCommitOperationState.operationDetail.sourceBranch.name
+    }
+
+    const { manualResolutions, targetBranchName: ourBranch } = conflictState
+    this._setMultiCommitOperationStep(repository, {
+      kind: MultiCommitOperationStepKind.ShowConflicts,
+      conflictState: {
+        kind: 'multiCommitOperation',
+        manualResolutions,
+        ourBranch,
+        theirBranch,
+      },
+    })
+
     this._showPopup({
-      type: PopupType.CherryPick,
+      type: PopupType.MultiCommitOperation,
       repository,
-      commits: snapshot.commits,
-      sourceBranch: null,
     })
   }
 
@@ -6854,8 +6914,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
   public _initializeMultiCommitOperation(
     repository: Repository,
     operationDetail: MultiCommitOperationDetail,
-    targetBranch: Branch,
-    commits: ReadonlyArray<Commit>
+    targetBranch: Branch | null,
+    commits: ReadonlyArray<Commit | CommitOneLine>
   ): void {
     this.repositoryStateCache.initializeMultiCommitOperationState(repository, {
       step: {
@@ -6871,8 +6931,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
       },
       userHasResolvedConflicts: false,
       commits,
-      currentTip: targetBranch.tip.sha,
-      originalBranchTip: targetBranch.tip.sha,
+      currentTip: targetBranch !== null ? targetBranch.tip.sha : null,
+      originalBranchTip: targetBranch !== null ? targetBranch.tip.sha : null,
       targetBranch,
     })
 
