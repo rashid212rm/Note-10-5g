@@ -15,9 +15,7 @@ export class MultiCommitOperation extends React.Component<
     const { kind } = this.props.state.operationDetail
     switch (kind) {
       case MultiCommitOperationKind.CherryPick:
-        return (
-          <CherryPick {...this.props} />
-        )
+        return <CherryPick {...this.props} />
       case MultiCommitOperationKind.Rebase:
         return null
       case MultiCommitOperationKind.Merge:
@@ -79,7 +77,3 @@ export class MultiCommitOperation extends React.Component<
     }
   }
 }
-function pick(object: any, arg1: string, arg2: string): JSX.IntrinsicAttributes & JSX.IntrinsicClassAttributes<CherryPick> & Readonly<IMultiCommitOperationProps> & Readonly<...> {
-  throw new Error('Function not implemented.')
-}
-
