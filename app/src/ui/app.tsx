@@ -8,9 +8,7 @@ import {
   FoldoutType,
   SelectionType,
   HistoryTabMode,
-  ICherryPickState,
   isRebaseConflictState,
-  isCherryPickConflictState,
 } from '../lib/app-state'
 import { Dispatcher } from './dispatcher'
 import { AppStore, GitHubUserStore, IssuesStore } from '../lib/stores'

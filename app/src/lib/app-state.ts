@@ -20,7 +20,6 @@ import {
   Progress,
   ICheckoutProgress,
   ICloneProgress,
-  ICherryPickProgress,
   IMultiCommitOperationProgress,
 } from '../models/progress'
 import { Popup } from '../models/popup'
@@ -788,7 +787,7 @@ export interface ICherryPickState {
    * This will be set to `null` when no target branch has been selected to
    * initiate the rebase.
    */
-  readonly progress: ICherryPickProgress | null
+  readonly progress: IMultiCommitOperationProgress | null
 
   /**
    * Whether the user has done work to resolve any conflicts as part of this
@@ -875,36 +874,6 @@ export interface IMultiCommitOperationState {
    * operation, and therefore, should be warned on aborting the operation.
    */
   readonly userHasResolvedConflicts: boolean
-
-  /**
-   * Array of commits used during the operation.
-   */
-  readonly commits: ReadonlyArray<Commit | CommitOneLine>
-
-  /**
-   * This is the commit sha of the HEAD of the in-flight operation used to compare
-   * the state of the after an operation to a previous state.
-   */
-  readonly currentTip: string | null
-
-  /**
-   * The commit id of the tip of the branch user is modifying in the operation.
-   *
-   * Uses:
-   *  - Cherry-picking = tip of target branch before cherry-pick, used to undo cherry-pick
-   *  - Rebasing = tip of current branch before rebase, used enable force pushing after rebase complete.
-   *  - Interactive Rebasing (Squash, Reorder) = tip of current branch, used for force pushing and undoing
-   */
-  readonly originalBranchTip: string | null
-
-  /**
-   * The branch that is being modified during the operation.
-   *
-   * - Cherry-pick = the branch chosen to copy commits to. (Null when use is create a branch)
-   * - Rebase = the current branch the user is on.
-   * - Squash = the current branch the user is on.
-   */
-  readonly targetBranch: Branch | null
 }
 
 export type MultiCommitOperationConflictState = {

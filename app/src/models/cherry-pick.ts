@@ -2,7 +2,7 @@ import { CherryPickConflictState } from '../lib/app-state'
 import { Branch } from './branch'
 import { CommitOneLine } from './commit'
 import { GitHubRepository } from './github-repository'
-import { ICherryPickProgress, IMultiCommitOperationProgress } from './progress'
+import { IMultiCommitOperationProgress } from './progress'
 import { IDetachedHead, IUnbornRepository, IValidBranch } from './tip'
 
 /** Represents a snapshot of the cherry pick state from the Git repository  */

@@ -4,15 +4,18 @@ import { BaseMultiCommitOperation } from './base-multi-commit-operation'
 
 export abstract class Reorder extends BaseMultiCommitOperation {
   protected onBeginOperation = () => {
-    const { repository, dispatcher, state } = this.props
-    const { commits, operationDetail } = state
+    const {
+      repository,
+      dispatcher,
+      state: { operationDetail },
+    } = this.props
 
     if (operationDetail.kind !== MultiCommitOperationKind.Reorder) {
       this.endFlowInvalidState()
       return
     }
 
-    const { beforeCommit, lastRetainedCommitRef } = operationDetail
+    const { beforeCommit, lastRetainedCommitRef, commits } = operationDetail
 
     return dispatcher.reorderCommits(
       repository,
@@ -28,15 +31,24 @@ export abstract class Reorder extends BaseMultiCommitOperation {
       repository,
       dispatcher,
       workingDirectory,
-      state,
       conflictState,
+      state: { operationDetail },
     } = this.props
-    const { commits, currentTip, targetBranch, originalBranchTip } = state
 
-    if (conflictState === null) {
+    if (
+      conflictState === null ||
+      operationDetail.kind !== MultiCommitOperationKind.Reorder
+    ) {
       this.endFlowInvalidState()
       return
     }
+
+    const {
+      commits,
+      currentTip,
+      targetBranch,
+      originalBranchTip,
+    } = operationDetail
 
     await dispatcher.switchMultiCommitOperationToShowProgress(repository)
 

@@ -15,7 +15,8 @@ export abstract class CherryPick extends BaseMultiCommitOperation {
 
     if (
       conflictState === null ||
-      operationDetail.kind !== MultiCommitOperationKind.CherryPick
+      operationDetail.kind !== MultiCommitOperationKind.CherryPick ||
+      targetBranch === null
     ) {
       this.endFlowInvalidState()
       return

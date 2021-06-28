@@ -3560,7 +3560,11 @@ export class Dispatcher {
     } = this.repositoryStateManager.get(repository)
     const { tip } = branchesState
 
-    if (tip.kind === TipState.Valid && multiCommitOperationState !== null) {
+    if (
+      tip.kind === TipState.Valid &&
+      multiCommitOperationState !== null &&
+      multiCommitOperationState.originalBranchTip !== null
+    ) {
       const { originalBranchTip } = multiCommitOperationState
       this.addRebasedBranchToForcePushList(repository, tip, originalBranchTip)
     }

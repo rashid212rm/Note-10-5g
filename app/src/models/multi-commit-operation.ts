@@ -140,6 +140,30 @@ interface IInteractiveRebaseDetails {
    * interactive rebase or null if rebasing to the root.
    */
   readonly lastRetainedCommitRef: string | null
+
+  /**
+   * Array of commits used during the operation.
+   */
+  readonly commits: ReadonlyArray<Commit>
+
+  /**
+   * This is the commit sha of the HEAD of the in-flight operation used to compare
+   * the state of the after an operation to a previous state.
+   */
+  readonly currentTip: string
+
+  /**
+   * The commit id of the tip of the branch user is modifying in the operation.
+   *
+   * Used for force pushing and undoing
+   */
+  readonly originalBranchTip: string
+
+  /**
+   * The branch that is being modified and the current branch the user is on
+   * which starting an interactive rebase operation.
+   */
+  readonly targetBranch: Branch
 }
 interface ISourceBranchDetails {
   /**
@@ -181,6 +205,26 @@ interface ICherryPickDetails extends ISourceBranchDetails {
    * Example: can create a new branch to copy commits to during cherry-pick
    */
   readonly branchCreated: boolean
+
+  /**
+   * Array of commits used during the operation.
+   */
+  readonly commits: ReadonlyArray<CommitOneLine>
+
+  /**
+   * The commit id of the tip of the branch user is modifying in the operation.
+   *
+   * Uses:
+   *  - Cherry-picking = tip of target branch before cherry-pick, used to undo cherry-pick
+   */
+  readonly originalBranchTip: string | null
+
+  /**
+   * The branch that is being modified during the operation.
+   *
+   * Null when use is create a branch
+   */
+  readonly targetBranch: Branch | null
 }
 
 interface IRebaseDetails extends ISourceBranchDetails {

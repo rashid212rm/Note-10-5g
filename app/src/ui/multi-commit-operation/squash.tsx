@@ -5,7 +5,7 @@ import { BaseMultiCommitOperation } from './base-multi-commit-operation'
 export abstract class Squash extends BaseMultiCommitOperation {
   protected onBeginOperation = () => {
     const { repository, dispatcher, state } = this.props
-    const { commits, operationDetail } = state
+    const { operationDetail } = state
 
     if (operationDetail.kind !== MultiCommitOperationKind.Squash) {
       this.endFlowInvalidState()
@@ -16,6 +16,7 @@ export abstract class Squash extends BaseMultiCommitOperation {
       targetCommit,
       lastRetainedCommitRef,
       commitContext,
+      commits,
     } = operationDetail
 
     return dispatcher.squash(
@@ -38,7 +39,12 @@ export abstract class Squash extends BaseMultiCommitOperation {
     } = this.props
     const { commits, currentTip, targetBranch, originalBranchTip } = state
 
-    if (conflictState === null) {
+    if (
+      conflictState === null ||
+      currentTip === null ||
+      targetBranch === null ||
+      originalBranchTip === null
+    ) {
       this.endFlowInvalidState()
       return
     }
