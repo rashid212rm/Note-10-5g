@@ -71,6 +71,7 @@ import {
   ApplicationTheme,
   getCurrentlyAppliedTheme,
   getPersistedTheme,
+  ICustomTheme,
   setPersistedTheme,
 } from '../../ui/lib/application-theme'
 import {
@@ -355,7 +356,7 @@ const MaxInvalidFoldersToDisplay = 3
 const hasShownCherryPickIntroKey = 'has-shown-cherry-pick-intro'
 const dragAndDropIntroTypesShownKey = 'drag-and-drop-intro-types-shown'
 const lastThankYouKey = 'version-and-users-of-last-thank-you'
-
+const customThemeKey = 'custom-theme-key'
 export class AppStore extends TypedBaseStore<IAppState> {
   private readonly gitStoreCache: GitStoreCache
 
@@ -448,6 +449,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
   private selectedBranchesTab = BranchesTab.Branches
   private selectedTheme = ApplicationTheme.System
+  private customTheme?: ICustomTheme
   private currentTheme: ApplicableTheme = ApplicationTheme.Light
 
   private hasUserViewedStash = false
@@ -836,6 +838,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
       selectedCloneRepositoryTab: this.selectedCloneRepositoryTab,
       selectedBranchesTab: this.selectedBranchesTab,
       selectedTheme: this.selectedTheme,
+      customTheme: this.customTheme,
       currentTheme: this.currentTheme,
       apiRepositories: this.apiRepositoriesStore.getState(),
       optOutOfUsageTracking: this.statsStore.getOptOut(),
@@ -1804,6 +1807,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     this.showSideBySideDiff = getShowSideBySideDiff()
 
     this.selectedTheme = getPersistedTheme()
+    this.customTheme = getObject<ICustomTheme>(customThemeKey)
     // Make sure the persisted theme is applied
     setPersistedTheme(this.selectedTheme)
 
@@ -5867,6 +5871,17 @@ export class AppStore extends TypedBaseStore<IAppState> {
   public _setSelectedTheme(theme: ApplicationTheme) {
     setPersistedTheme(theme)
     this.selectedTheme = theme
+    this.emitUpdate()
+
+    return Promise.resolve()
+  }
+
+  /**
+   * Set the custom application-wide theme
+   */
+  public _setCustomTheme(theme: ICustomTheme) {
+    setObject(customThemeKey, theme)
+    this.customTheme = theme
     this.emitUpdate()
 
     return Promise.resolve()

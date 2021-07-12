@@ -5,6 +5,21 @@ import {
 } from '../../lib/get-os'
 import { getBoolean } from '../../lib/local-storage'
 
+/** Interface for set of customizable styles */
+export interface ICustomTheme {
+  backgroundColor: string
+  // boxBackgroundColor: string
+  // boxAltBackgroundColor: string
+  boxBorderColor: string
+  boxSelectedBackgroundColor: string
+  buttonBackground: string
+  buttonTextColor: string
+  secondaryButtonBackground: string
+  secondaryButtonTextColor: string
+  textColor: string
+  toolbarBackgroundColor: string
+}
+
 /**
  * A set of the user-selectable appearances (aka themes)
  */
