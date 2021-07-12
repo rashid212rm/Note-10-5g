@@ -3,6 +3,7 @@ import {
   ApplicationTheme,
   supportsSystemThemeChanges,
   getCurrentlyAppliedTheme,
+  ICustomTheme,
 } from '../lib/application-theme'
 import { Row } from '../lib/row'
 import { DialogContent } from '../dialog'
@@ -10,10 +11,13 @@ import {
   VerticalSegmentedControl,
   ISegmentedItem,
 } from '../lib/vertical-segmented-control'
+import { CustomThemeSelector } from './custom-theme-selector'
 
 interface IAppearanceProps {
   readonly selectedTheme: ApplicationTheme
+  readonly customTheme?: ICustomTheme
   readonly onSelectedThemeChanged: (theme: ApplicationTheme) => void
+  readonly onCustomThemeChanged: (theme: ICustomTheme) => void
 }
 
 const systemTheme: ISegmentedItem<ApplicationTheme> = {
@@ -41,6 +45,10 @@ export class Appearance extends React.Component<IAppearanceProps, {}> {
     this.props.onSelectedThemeChanged(theme)
   }
 
+  private onCustomThemeChanged = (theme: ICustomTheme) => {
+    this.props.onCustomThemeChanged(theme)
+  }
+
   public render() {
     let selectedTheme = this.props.selectedTheme
 
@@ -58,6 +66,13 @@ export class Appearance extends React.Component<IAppearanceProps, {}> {
             items={themes}
             selectedKey={selectedTheme}
             onSelectionChanged={this.onSelectedThemeChanged}
+          />
+        </Row>
+        <Row>
+          <CustomThemeSelector
+            onCustomThemeChanged={this.onCustomThemeChanged}
+            selectedTheme={selectedTheme}
+            customTheme={this.props.customTheme}
           />
         </Row>
       </DialogContent>
