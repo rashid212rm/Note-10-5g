@@ -1,6 +1,6 @@
 {
   "releases": {
-    "2.9.1-test1": ["[Improved] Electron v13"],
+    "2.9.1-test2": ["[Improved] Electron v13"],
     "2.9.1-beta1": [
       "[Added] Add Fluent Terminal shell support - #12305. Thanks @Idered!",
       "[Fixed] History tab shows all commits as the user scrolls down - #12506 #3704",
