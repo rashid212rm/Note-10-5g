@@ -1,5 +1,6 @@
 {
   "releases": {
+    "2.9.4-test1": ["[Improved] Electron v13"],
     "2.9.4-beta1": [
       "[Added] Add a menu item to view a committed file change on GitHub - #12492. Thanks @haykam821!",
       "[Added] Customizable high contrast theme - #12833",
