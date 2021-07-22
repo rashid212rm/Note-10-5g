@@ -5293,9 +5293,11 @@ export class AppStore extends TypedBaseStore<IAppState> {
   ): Promise<void> {
     try {
       if (moveToTrash) {
-        const deleted = shell.moveItemToTrash(repository.path)
+        try {
+          await shell.moveItemToTrash(repository.path)
+        } catch (error) {
+          log.error(error)
 
-        if (!deleted) {
           this.emitError(
             new Error(
               `Failed moving repository directory to ${TrashNameLabel}.\n\nA common reason for this is if a file or directory is open in another program.`
