@@ -38,6 +38,7 @@ The release notes for the latest beta versions are available [here](https://desk
 
 There are several community-supported package managers that can be used to
 install GitHub Desktop:
+     - testing a change
  - Windows users can install using [Chocolatey](https://chocolatey.org/) package manager:
       `c:\> choco install github-desktop`
  - macOS users can install using [Homebrew](https://brew.sh/) package manager:
