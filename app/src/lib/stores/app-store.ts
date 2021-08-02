@@ -70,7 +70,7 @@ import {
   ApplicableTheme,
   ApplicationTheme,
   getCurrentlyAppliedTheme,
-  getPersistedTheme,
+  getPersistedThemeName,
   ICustomTheme,
   setPersistedTheme,
 } from '../../ui/lib/application-theme'
@@ -1806,12 +1806,15 @@ export class AppStore extends TypedBaseStore<IAppState> {
     )
     this.showSideBySideDiff = getShowSideBySideDiff()
 
-    this.selectedTheme = getPersistedTheme()
+    this.selectedTheme = getPersistedThemeName()
     this.customTheme = getObject<ICustomTheme>(customThemeKey)
     // Make sure the persisted theme is applied
     setPersistedTheme(this.selectedTheme)
 
-    this.currentTheme = getCurrentlyAppliedTheme()
+    this.currentTheme =
+      this.selectedTheme !== ApplicationTheme.HighContrast
+        ? getCurrentlyAppliedTheme()
+        : this.selectedTheme
 
     themeChangeMonitor.onThemeChanged(theme => {
       this.currentTheme = theme

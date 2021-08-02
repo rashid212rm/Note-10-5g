@@ -1,9 +1,5 @@
 import * as React from 'react'
-import {
-  ApplicationTheme,
-  getThemeName,
-  ICustomTheme,
-} from '../lib/application-theme'
+import { ApplicationTheme, ICustomTheme } from '../lib/application-theme'
 import { SketchPicker } from 'react-color'
 
 // The variable references are to ~primer-support/lib/variables/color-system.scss
@@ -20,32 +16,14 @@ const primer = {
   blue: '#0366d6',
 }
 
-const defaultThemes = {
-  dark: {
-    backgroundColor: primer.gray900,
-    // boxBackgroundColor: '#3b3b3b', // #{darken($gray-900, 3%)};
-    // boxAltBackgroundColor: primer.gray800,
-    boxBorderColor: '#141414', // not in primer
-    boxSelectedBackgroundColor: primer.gray700,
-    buttonBackground: primer.blue,
-    buttonTextColor: primer.white,
-    secondaryButtonBackground: primer.gray800,
-    secondaryButtonTextColor: primer.gray300,
-    textColor: primer.gray300,
-    toolbarBackgroundColor: '#1c2125', //#{darken($gray-900, 3%)};
-  },
-  light: {
-    backgroundColor: primer.white,
-    // boxBackgroundColor: primer.white,
-    // boxAltBackgroundColor: primer.gray100,
-    boxBorderColor: primer.gray200,
-    boxSelectedBackgroundColor: '#ebeef1', // not in primer
-    buttonBackground: primer.blue,
-    buttonTextColor: primer.white,
-    secondaryButtonBackground: primer.gray000,
-    secondaryButtonTextColor: primer.gray900,
-    textColor: primer.gray900,
-    toolbarBackgroundColor: primer.gray900,
+const themeDefaults = {
+  [ApplicationTheme.HighContrast]: {
+    background: '#000',
+    toolbarBackground: '#000',
+    text: '#FFFF00',
+    hoverItem: primer.gray800,
+    activeItem: primer.blue,
+    activeText: primer.white,
   },
 }
 
@@ -56,7 +34,7 @@ interface ICustomThemeSelectorProps {
 }
 
 interface ICustomThemeSelectorState {
-  readonly customTheme: ICustomTheme
+  readonly customTheme?: ICustomTheme
   readonly selectedThemeOptionColor: keyof ICustomTheme
   readonly isPopoverOpen: boolean
 }
@@ -68,24 +46,33 @@ export class CustomThemeSelector extends React.Component<
   public constructor(props: ICustomThemeSelectorProps) {
     super(props)
 
-    let { customTheme } = this.props
-    if (customTheme === undefined) {
-      const theme = getThemeName(this.props.selectedTheme)
-      if (theme === 'system') {
-        return
-      }
-      customTheme = defaultThemes[theme]
+    const { customTheme: setTheme, selectedTheme } = this.props
+    let customTheme =
+      selectedTheme !== ApplicationTheme.HighContrast ? undefined : setTheme
+    if (
+      setTheme === undefined &&
+      selectedTheme === ApplicationTheme.HighContrast
+    ) {
+      customTheme = themeDefaults[selectedTheme]
+      this.props.onCustomThemeChanged(customTheme)
     }
 
     this.state = {
-      customTheme: customTheme,
+      customTheme,
       isPopoverOpen: false,
-      selectedThemeOptionColor: 'backgroundColor',
+      selectedThemeOptionColor: 'background',
     }
   }
 
   private onThemeChange = (color: { hex: string }) => {
     this.closePopover()
+    if (this.state.customTheme === undefined) {
+      log.error(
+        '[onThemeChange] - customTheme not defined. This should not be possible.'
+      )
+      return
+    }
+
     this.setState({
       customTheme: {
         ...this.state.customTheme,
@@ -96,21 +83,19 @@ export class CustomThemeSelector extends React.Component<
   }
 
   private openPopover = () => {
-    this.setState(prevState => {
-      if (prevState.isPopoverOpen === false) {
-        return { isPopoverOpen: true }
-      }
-      return null
-    })
+    if (this.state === null || this.state.isPopoverOpen === true) {
+      return
+    }
+
+    this.setState({ isPopoverOpen: true })
   }
 
   private closePopover = () => {
-    this.setState(prevState => {
-      if (prevState.isPopoverOpen) {
-        return { isPopoverOpen: false }
-      }
-      return null
-    })
+    if (this.state === null || this.state.isPopoverOpen === false) {
+      return
+    }
+
+    this.setState({ isPopoverOpen: false })
   }
 
   private onSwatchClick = (selectedThemeOptionColor: keyof ICustomTheme) => {
@@ -121,7 +106,14 @@ export class CustomThemeSelector extends React.Component<
   }
 
   private renderPopover() {
-    if (!this.state.isPopoverOpen) {
+    if (this.state === null || !this.state.isPopoverOpen) {
+      return
+    }
+
+    if (this.state.customTheme === undefined) {
+      log.error(
+        '[onThemeChange] - customTheme not defined. This should not be possible.'
+      )
       return
     }
 
@@ -135,19 +127,19 @@ export class CustomThemeSelector extends React.Component<
     )
   }
 
-  private renderThemeOptions() {
+  private renderThemeOptions = () => {
+    if (this.state.customTheme === undefined) {
+      // not using a customizable theme
+      return
+    }
+
     const themePropTitleMap = new Map([
-      ['textColor', 'Text'],
-      ['backgroundColor', 'Background'],
-      ['boxBackgroundColor', 'Box Background'],
-      ['boxBorderColor', 'Box Border'],
-      ['boxSelectedBackgroundColor', 'Box Selected Background'],
-      ['boxAltBackgroundColor', 'Box Alt Background'],
-      ['toolbarBackgroundColor', 'Toolbar Background'],
-      ['buttonBackground', 'Button Background'],
-      ['buttonTextColor', 'Button Text'],
-      ['secondaryButtonBackground', 'Button Secondary Background'],
-      ['secondaryButtonTextColor', 'Button Secondary Text'],
+      ['background', 'Background'],
+      ['toolbarBackground', 'Toolbar Background'],
+      ['text', 'Text'],
+      ['activeItem', 'Active/Action Item'],
+      ['activeText', 'Active/Action Item Text'],
+      ['hoverItem', 'Item Hover'],
     ])
 
     return Object.entries(this.state.customTheme).map(([key, value], i) => {
