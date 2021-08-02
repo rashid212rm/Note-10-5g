@@ -7,29 +7,34 @@ import { getBoolean } from '../../lib/local-storage'
 
 /** Interface for set of customizable styles */
 export interface ICustomTheme {
-  backgroundColor: string
-  // boxBackgroundColor: string
-  // boxAltBackgroundColor: string
-  boxBorderColor: string
-  boxSelectedBackgroundColor: string
-  buttonBackground: string
-  buttonTextColor: string
-  secondaryButtonBackground: string
-  secondaryButtonTextColor: string
-  textColor: string
-  toolbarBackgroundColor: string
+  // application background color
+  background: string
+  // top nav bar background color
+  toolbarBackground: string
+  // main application text color
+  text: string
+  // used to indicate mouse hovering
+  hoverItem: string
+  // used to indicate a selected item or action button
+  activeItem: string
+  // text used on selected item or action button
+  activeText: string
 }
 
 /**
  * A set of the user-selectable appearances (aka themes)
  */
 export enum ApplicationTheme {
-  Light,
-  Dark,
-  System,
+  Light = 'light',
+  Dark = 'dark',
+  System = 'system',
+  HighContrast = 'highContrast',
 }
 
-export type ApplicableTheme = ApplicationTheme.Light | ApplicationTheme.Dark
+export type ApplicableTheme =
+  | ApplicationTheme.Light
+  | ApplicationTheme.Dark
+  | ApplicationTheme.HighContrast
 
 /**
  * Gets the friendly name of an application theme for use
@@ -43,25 +48,10 @@ export function getThemeName(
     case ApplicationTheme.Light:
       return 'light'
     case ApplicationTheme.Dark:
+    case ApplicationTheme.HighContrast:
       return 'dark'
     default:
       return 'system'
-  }
-}
-
-/**
- * Load the currently selected theme
- */
-export function getPersistedTheme(): ApplicationTheme {
-  const currentTheme = getPersistedThemeName()
-
-  switch (currentTheme) {
-    case 'light':
-      return ApplicationTheme.Light
-    case 'dark':
-      return ApplicationTheme.Dark
-    default:
-      return ApplicationTheme.System
   }
 }
 
@@ -96,22 +86,18 @@ const applicationThemeKey = 'theme'
 /**
  * Returns User's theme preference or 'system' if not set or parsable
  */
-function getApplicationThemeSetting(): 'light' | 'dark' | 'system' {
+function getApplicationThemeSetting(): ApplicationTheme {
   const themeSetting = localStorage.getItem(applicationThemeKey)
 
-  if (themeSetting === null) {
-    return 'system'
-  }
-
   if (
-    themeSetting === 'light' ||
-    themeSetting === 'dark' ||
-    themeSetting === 'system'
+    themeSetting === ApplicationTheme.Light ||
+    themeSetting === ApplicationTheme.Dark ||
+    themeSetting === ApplicationTheme.HighContrast
   ) {
     return themeSetting
   }
 
-  return 'system'
+  return ApplicationTheme.System
 }
 
 /**
@@ -124,11 +110,9 @@ export function getCurrentlyAppliedTheme(): ApplicableTheme {
 /**
  * Load the name of the currently selected theme
  */
-export function getPersistedThemeName(): string {
-  const setting = migrateAutomaticallySwitchSetting()
-
-  if (setting === 'system') {
-    return setting
+export function getPersistedThemeName(): ApplicationTheme {
+  if (migrateAutomaticallySwitchSetting() === 'system') {
+    return ApplicationTheme.System
   }
 
   return getApplicationThemeSetting()
@@ -139,7 +123,7 @@ export function getPersistedThemeName(): string {
  */
 export function setPersistedTheme(theme: ApplicationTheme): void {
   const themeName = getThemeName(theme)
-  localStorage.setItem(applicationThemeKey, themeName)
+  localStorage.setItem(applicationThemeKey, theme)
   remote.nativeTheme.themeSource = themeName
 }
 

@@ -37,6 +37,11 @@ const themes: ReadonlyArray<ISegmentedItem<ApplicationTheme>> = [
     description: 'GitHub Desktop is for you too, creatures of the night',
     key: ApplicationTheme.Dark,
   },
+  {
+    title: 'High Contrast',
+    description: 'Customizable High Contrast Theme',
+    key: ApplicationTheme.HighContrast,
+  },
   ...(supportsSystemThemeChanges() ? [systemTheme] : []),
 ]
 

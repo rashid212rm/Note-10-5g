@@ -1,6 +1,7 @@
 import { remote } from 'electron'
 import {
   ApplicableTheme,
+  ApplicationTheme,
   getCurrentlyAppliedTheme,
   supportsSystemThemeChanges,
 } from './application-theme'
@@ -35,6 +36,9 @@ class ThemeChangeMonitor implements IDisposable {
   }
 
   private emitThemeChanged(theme: ApplicableTheme) {
+    this.emitter.emit('theme-changed', theme)
+  }
+  public emitHighContrastTheme(theme: ApplicationTheme) {
     this.emitter.emit('theme-changed', theme)
   }
 }

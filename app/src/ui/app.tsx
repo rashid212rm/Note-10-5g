@@ -2805,7 +2805,13 @@ export class App extends React.Component<IAppProps, IAppState> {
 
     return (
       <div id="desktop-app-chrome" className={className}>
-        <AppTheme theme={currentTheme} customTheme={this.state.customTheme} />
+        <AppTheme
+          theme={currentTheme}
+          customTheme={this.state.customTheme}
+          useCustomTheme={
+            this.state.selectedTheme === ApplicationTheme.HighContrast
+          }
+        />
         {this.renderTitlebar()}
         {this.state.showWelcomeFlow
           ? this.renderWelcomeFlow()
