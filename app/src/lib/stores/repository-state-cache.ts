@@ -3,7 +3,6 @@ import { Commit } from '../../models/commit'
 import { PullRequest } from '../../models/pull-request'
 import { Repository } from '../../models/repository'
 import {
-  CommittedFileChange,
   WorkingDirectoryFileChange,
   WorkingDirectoryStatus,
 } from '../../models/status'
@@ -18,7 +17,6 @@ import {
   ICommitSelection,
   IRebaseState,
   ChangesSelectionKind,
-  ICherryPickState,
   IMultiCommitOperationUndoState,
   IMultiCommitOperationState,
 } from '../app-state'
@@ -122,17 +120,6 @@ export class RepositoryStateCache {
     })
   }
 
-  public updateCherryPickState<K extends keyof ICherryPickState>(
-    repository: Repository,
-    fn: (state: ICherryPickState) => Pick<ICherryPickState, K>
-  ) {
-    this.update(repository, state => {
-      const { cherryPickState } = state
-      const newState = merge(cherryPickState, fn(cherryPickState))
-      return { cherryPickState: newState }
-    })
-  }
-
   public updateMultiCommitOperationUndoState<
     K extends keyof IMultiCommitOperationUndoState
   >(
@@ -195,7 +182,7 @@ function getInitialRepositoryState(): IRepositoryState {
     commitSelection: {
       shas: [],
       file: null,
-      changedFiles: new Array<CommittedFileChange>(),
+      changesetData: { files: [], linesAdded: 0, linesDeleted: 0 },
       diff: null,
     },
     changesState: {
@@ -258,13 +245,6 @@ function getInitialRepositoryState(): IRepositoryState {
     checkoutProgress: null,
     pushPullFetchProgress: null,
     revertProgress: null,
-    cherryPickState: {
-      step: null,
-      progress: null,
-      userHasResolvedConflicts: false,
-      targetBranchUndoSha: null,
-      branchCreated: false,
-    },
     multiCommitOperationUndoState: null,
     multiCommitOperationState: null,
   }
