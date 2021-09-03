@@ -173,8 +173,8 @@
   .before {
     color: var(--diff-delete-text-color);
     background: var(--diff-delete-background-color);
-    border-right: 1px solid var(--diff-border-color);
-    border: var(--diff-delete-border);
+    border-right: var(--diff-delete-border);
+    border-left: var(--diff-delete-border);
 
     .line-number {
       background: var(--diff-delete-gutter-background-color);
@@ -187,12 +187,21 @@
       color: var(--diff-delete-hover-text-color);
       border-color: var(--diff-delete-hover-border-color);
     }
+
+    &.is-first {
+      border-top: var(--diff-delete-border);
+    }
+
+    &.is-last {
+      border-bottom: var(--diff-delete-border);
+    }
   }
 
   .after {
     color: var(--diff-add-text-color);
     background: var(--diff-add-background-color);
-    border: var(--diff-add-border);
+    border-left: var(--diff-add-border);
+    border-right: var(--diff-add-border);
 
     .line-number {
       background: var(--diff-add-gutter-background-color);
@@ -204,6 +213,14 @@
       background: var(--diff-add-hover-background-color);
       color: var(--diff-add-hover-text-color);
       border-color: var(--diff-add-hover-border-color);
+    }
+
+    &.is-first {
+      border-top: var(--diff-add-border);
+    }
+
+    &.is-last {
+      border-bottom: var(--diff-add-border);
     }
   }
 

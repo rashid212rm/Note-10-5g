@@ -45,6 +45,7 @@ import {
   DiffColumn,
   getLineWidthFromDigitCount,
   getNumberOfDigits,
+  getFirstAndLastClasses,
 } from './diff-helpers'
 import { showContextualMenu } from '../main-process-proxy'
 import { getTokens } from './diff-syntax-mode'
@@ -296,11 +297,27 @@ export class SideBySideDiff extends React.Component<
       this.props.showSideBySideDiff,
       this.newContentLines !== null
     )
-    const row = rows[index]
 
+    const row = rows[index]
     if (row === undefined) {
       return null
     }
+
+    const prev = rows[index - 1]
+    const next = rows[index + 1]
+
+    const beforeClassNames = getFirstAndLastClasses(
+      row,
+      prev,
+      next,
+      DiffRowType.Deleted
+    )
+    const afterClassNames = getFirstAndLastClasses(
+      row,
+      prev,
+      next,
+      DiffRowType.Added
+    )
 
     const lineNumberWidth = `${getLineWidthFromDigitCount(
       getNumberOfDigits(this.state.diff.maxLineNumber)
@@ -338,6 +355,8 @@ export class SideBySideDiff extends React.Component<
             onContextMenuHunk={this.onContextMenuHunk}
             onContextMenuExpandHunk={this.onContextMenuExpandHunk}
             onContextMenuText={this.onContextMenuText}
+            beforeClassNames={beforeClassNames}
+            afterClassNames={afterClassNames}
           />
         </div>
       </CellMeasurer>

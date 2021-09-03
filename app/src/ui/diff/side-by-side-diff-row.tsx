@@ -117,14 +117,31 @@ interface ISideBySideDiffRowProps {
    * Called when the user right-clicks text on the diff.
    */
   readonly onContextMenuText: () => void
+
+  /**
+   * Array of classes applied to the after section of a row
+   */
+  readonly afterClassNames: ReadonlyArray<string>
+
+  /**
+   * Array of classes applied to the before section of a row
+   */
+  readonly beforeClassNames: ReadonlyArray<string>
 }
 
 export class SideBySideDiffRow extends React.Component<
   ISideBySideDiffRowProps
 > {
   public render() {
-    const { row, showSideBySideDiff } = this.props
+    const {
+      row,
+      showSideBySideDiff,
+      beforeClassNames,
+      afterClassNames,
+    } = this.props
 
+    const beforeClasses = classNames('before', ...beforeClassNames)
+    const afterClasses = classNames('after', ...afterClassNames)
     switch (row.type) {
       case DiffRowType.Hunk: {
         const className = ['row', 'hunk-info']
@@ -173,7 +190,7 @@ export class SideBySideDiffRow extends React.Component<
               className="row added"
               onMouseEnter={this.onMouseEnterLineNumber}
             >
-              <div className="after">
+              <div className={afterClasses}>
                 {this.renderLineNumbers([undefined, lineNumber], isSelected)}
                 {this.renderHunkHandle()}
                 {this.renderContent(row.data)}
@@ -184,12 +201,12 @@ export class SideBySideDiffRow extends React.Component<
 
         return (
           <div className="row added" onMouseEnter={this.onMouseEnterLineNumber}>
-            <div className="before">
+            <div className={beforeClasses}>
               {this.renderLineNumber()}
               {this.renderContentFromString('')}
             </div>
             {this.renderHunkHandle()}
-            <div className="after">
+            <div className={afterClasses}>
               {this.renderLineNumber(lineNumber, isSelected)}
               {this.renderContent(row.data)}
             </div>
@@ -204,7 +221,7 @@ export class SideBySideDiffRow extends React.Component<
               className="row deleted"
               onMouseEnter={this.onMouseEnterLineNumber}
             >
-              <div className="before">
+              <div className={beforeClasses}>
                 {this.renderLineNumbers([lineNumber, undefined], isSelected)}
                 {this.renderHunkHandle()}
                 {this.renderContent(row.data)}
@@ -218,12 +235,12 @@ export class SideBySideDiffRow extends React.Component<
             className="row deleted"
             onMouseEnter={this.onMouseEnterLineNumber}
           >
-            <div className="before">
+            <div className={beforeClasses}>
               {this.renderLineNumber(lineNumber, isSelected)}
               {this.renderContent(row.data)}
             </div>
             {this.renderHunkHandle()}
-            <div className="after">
+            <div className={afterClasses}>
               {this.renderLineNumber()}
               {this.renderContentFromString('')}
             </div>
@@ -234,12 +251,18 @@ export class SideBySideDiffRow extends React.Component<
         const { beforeData: before, afterData: after } = row
         return (
           <div className="row modified">
-            <div className="before" onMouseEnter={this.onMouseEnterLineNumber}>
+            <div
+              className={beforeClasses}
+              onMouseEnter={this.onMouseEnterLineNumber}
+            >
               {this.renderLineNumber(before.lineNumber, before.isSelected)}
               {this.renderContent(before)}
             </div>
             {this.renderHunkHandle()}
-            <div className="after" onMouseEnter={this.onMouseEnterLineNumber}>
+            <div
+              className={afterClasses}
+              onMouseEnter={this.onMouseEnterLineNumber}
+            >
               {this.renderLineNumber(after.lineNumber, after.isSelected)}
               {this.renderContent(after)}
             </div>

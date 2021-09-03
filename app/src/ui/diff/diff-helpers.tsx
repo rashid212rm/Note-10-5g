@@ -387,3 +387,32 @@ export function getLargestLineNumber(hunks: DiffHunk[]): number {
 export function getNumberOfDigits(val: number): number {
   return (Math.log(val) * Math.LOG10E + 1) | 0
 }
+
+export function getFirstAndLastClasses(
+  row: SimplifiedDiffRow,
+  previousRow: SimplifiedDiffRow | undefined,
+  nextRow: SimplifiedDiffRow,
+  addedDeleted: DiffRowType
+): ReadonlyArray<string> {
+  const classes: Array<string> = []
+  const typesToCheck = [addedDeleted, DiffRowType.Modified]
+
+  // Is the row of the type we are checking? No. Then can't be first or last.
+  if (!typesToCheck.includes(row.type)) {
+    return []
+  }
+
+  // Is the previous row exist or is of the type we are checking?
+  // No. Then this row must be the first of this type.
+  if (previousRow === undefined || !typesToCheck.includes(previousRow.type)) {
+    classes.push('is-first')
+  }
+
+  // Is the next row exist or is of the type we are checking?
+  // No. Then this row must be last of this type.
+  if (nextRow === undefined || !typesToCheck.includes(nextRow.type)) {
+    classes.push('is-last')
+  }
+
+  return classes
+}
