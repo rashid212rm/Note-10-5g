@@ -75,11 +75,11 @@ function getDiffLineBackgroundClassNames(
   const nextDiffLine = diffLineForIndex(diffHunks, diffLineIndex + 1)
   const classNames = []
 
-  if (prevDiffLine !== null && prevDiffLine.text[0] !== tokenIndex) {
+  if (prevDiffLine === null || prevDiffLine.text[0] !== tokenIndex) {
     classNames.push('is-first')
   }
 
-  if (nextDiffLine !== null && nextDiffLine.text[0] !== tokenIndex) {
+  if (nextDiffLine === null || nextDiffLine.text[0] !== tokenIndex) {
     classNames.push('is-last')
   }
 
