@@ -50,8 +50,40 @@ function skipLine(stream: CodeMirror.StringStream, state: IState) {
   return null
 }
 
-function getBaseDiffLineStyle(token: DiffSyntaxToken) {
-  return `line-${token} line-background-${token}`
+function getBaseDiffLineStyle(
+  token: DiffSyntaxToken,
+  customBackgroundClassNames: ReadonlyArray<string> = []
+) {
+  const customBackgroundStyles = customBackgroundClassNames
+    .map(c => `line-background-${c}`)
+    .join(' ')
+
+  return `line-${token} line-background-${token} ${customBackgroundStyles}`
+}
+
+function getDiffLineBackgroundClassNames(
+  tokenIndex: string,
+  diffLineIndex: number,
+  diffHunks: ReadonlyArray<DiffHunk> | undefined
+): string[] {
+  const addDeleteTokens = ['+', '-']
+  if (!addDeleteTokens.includes(tokenIndex) || diffHunks === undefined) {
+    return []
+  }
+
+  const prevDiffLine = diffLineForIndex(diffHunks, diffLineIndex - 1)
+  const nextDiffLine = diffLineForIndex(diffHunks, diffLineIndex + 1)
+  const classNames = []
+
+  if (prevDiffLine !== null && prevDiffLine.text[0] !== tokenIndex) {
+    classNames.push('is-first')
+  }
+
+  if (nextDiffLine !== null && nextDiffLine.text[0] !== tokenIndex) {
+    classNames.push('is-last')
+  }
+
+  return classNames
 }
 
 /**
@@ -159,7 +191,12 @@ export class DiffSyntaxMode {
         return null
       }
 
-      let result = getBaseDiffLineStyle(token)
+      const lineBackgroundClassNames = getDiffLineBackgroundClassNames(
+        index,
+        state.diffLineIndex,
+        this.hunks
+      )
+      let result = getBaseDiffLineStyle(token, lineBackgroundClassNames)
 
       // If it's a hunk header line, we want to make a few extra checks
       // depending on the distance to the previous hunk.

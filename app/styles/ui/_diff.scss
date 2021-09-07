@@ -269,13 +269,32 @@
 .CodeMirror-linebackground {
   &.diff-add {
     background: var(--diff-add-background-color);
-    border: var(--diff-add-border);
-    margin-top: 1px;
+    border-right: var(--diff-add-border);
+    border-left: var(--diff-add-border);
+
+    &.is-first {
+      margin-top: 1px;
+      border-top: var(--diff-add-border);
+    }
+
+    &.is-last {
+      border-bottom: var(--diff-add-border);
+    }
   }
 
   &.diff-delete {
     background: var(--diff-delete-background-color);
-    border: var(--diff-delete-border);
+    border-right: var(--diff-delete-border);
+    border-left: var(--diff-delete-border);
+
+    &.is-first {
+      margin-top: 1px;
+      border-top: var(--diff-delete-border);
+    }
+
+    &.is-last {
+      border-bottom: var(--diff-delete-border);
+    }
   }
 
   &.diff-context {
