@@ -183,7 +183,7 @@ export class DiffSyntaxMode {
     // be the diff line marker so we always take care of that first.
     if (stream.sol()) {
       const index = stream.next()
-
+      const currentLineIndex = state.diffLineIndex
       if (stream.eol()) {
         state.diffLineIndex++
       }
@@ -200,9 +200,10 @@ export class DiffSyntaxMode {
 
       const lineBackgroundClassNames = getDiffLineBackgroundClassNames(
         index,
-        state.diffLineIndex,
+        currentLineIndex,
         this.hunks
       )
+
       let result = getBaseDiffLineStyle(token, lineBackgroundClassNames)
 
       // If it's a hunk header line, we want to make a few extra checks
