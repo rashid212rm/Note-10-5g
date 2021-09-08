@@ -391,7 +391,7 @@ export function getNumberOfDigits(val: number): number {
 export function getFirstAndLastClasses(
   row: SimplifiedDiffRow,
   previousRow: SimplifiedDiffRow | undefined,
-  nextRow: SimplifiedDiffRow,
+  nextRow: SimplifiedDiffRow | undefined,
   addedDeleted: DiffRowType
 ): ReadonlyArray<string> {
   const classes: Array<string> = []
