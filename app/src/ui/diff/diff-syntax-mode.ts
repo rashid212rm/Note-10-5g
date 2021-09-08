@@ -42,6 +42,11 @@ const TokenNames: { [key: string]: DiffSyntaxToken | null } = {
 interface IState {
   diffLineIndex: number
   previousHunkOldEndLine: number | null
+  prevLineTokenIndex: string | null
+}
+
+type StringStreamWithLookahead = CodeMirror.StringStream & {
+  lookAhead: (n: number) => string | undefined
 }
 
 function skipLine(stream: CodeMirror.StringStream, state: IState) {
@@ -63,23 +68,21 @@ function getBaseDiffLineStyle(
 
 function getDiffLineBackgroundClassNames(
   tokenIndex: string,
-  diffLineIndex: number,
-  diffHunks: ReadonlyArray<DiffHunk> | undefined
+  prevTokenIndex: string | null,
+  nextTokenIndex: string | null
 ): string[] {
   const addDeleteTokens = ['+', '-']
-  if (!addDeleteTokens.includes(tokenIndex) || diffHunks === undefined) {
+  if (!addDeleteTokens.includes(tokenIndex)) {
     return []
   }
 
-  const prevDiffLine = diffLineForIndex(diffHunks, diffLineIndex - 1)
-  const nextDiffLine = diffLineForIndex(diffHunks, diffLineIndex + 1)
   const classNames = []
 
-  if (prevDiffLine === null || prevDiffLine.text[0] !== tokenIndex) {
+  if (prevTokenIndex === null || prevTokenIndex !== tokenIndex) {
     classNames.push('is-first')
   }
 
-  if (nextDiffLine === null || nextDiffLine.text[0] !== tokenIndex) {
+  if (nextTokenIndex === null || nextTokenIndex !== tokenIndex) {
     classNames.push('is-last')
   }
 
@@ -147,7 +150,11 @@ export class DiffSyntaxMode {
   }
 
   public startState(): IState {
-    return { diffLineIndex: 0, previousHunkOldEndLine: null }
+    return {
+      diffLineIndex: 0,
+      previousHunkOldEndLine: null,
+      prevLineTokenIndex: null,
+    }
   }
 
   public blankLine(state: IState) {
@@ -183,7 +190,7 @@ export class DiffSyntaxMode {
     // be the diff line marker so we always take care of that first.
     if (stream.sol()) {
       const index = stream.next()
-      const currentLineIndex = state.diffLineIndex
+
       if (stream.eol()) {
         state.diffLineIndex++
       }
@@ -198,11 +205,17 @@ export class DiffSyntaxMode {
         return null
       }
 
+      // Hack to get the next line. We found that the StringStream has an extra
+      // property of lookAhead at run time that has what we need to access the
+      // next line. This just exposes it so we can use it.
+      const nextLine = (stream as StringStreamWithLookahead).lookAhead(1)
+      const nextLineTokenIndex = nextLine !== undefined ? nextLine[0] : null
       const lineBackgroundClassNames = getDiffLineBackgroundClassNames(
         index,
-        currentLineIndex,
-        this.hunks
+        state.prevLineTokenIndex,
+        nextLineTokenIndex
       )
+      state.prevLineTokenIndex = index
 
       let result = getBaseDiffLineStyle(token, lineBackgroundClassNames)
 
