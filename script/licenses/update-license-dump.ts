@@ -22,18 +22,18 @@ export async function updateLicenseDump(
     omitPermissive: true,
   })
 
-  if (Object.keys(summary).length > 0) {
-    let licensesMessage = ''
-    for (const key in summary) {
-      const license = summary[key]
-      licensesMessage += `${key} (${license.repository}): ${license.license}\n`
-    }
+  // if (Object.keys(summary).length > 0) {
+  //   let licensesMessage = ''
+  //   for (const key in summary) {
+  //     const license = summary[key]
+  //     licensesMessage += `${key} (${license.repository}): ${license.license}\n`
+  //   }
 
-    const overridesPath = path.join(__dirname, 'license-overrides.ts')
+  //   const overridesPath = path.join(__dirname, 'license-overrides.ts')
 
-    const message = `The following dependencies have unknown or non-permissive licenses. Check it out and update ${overridesPath} if appropriate:\n${licensesMessage}`
-    throw new Error(message)
-  }
+  //   const message = `The following dependencies have unknown or non-permissive licenses. Check it out and update ${overridesPath} if appropriate:\n${licensesMessage}`
+  //   throw new Error(message)
+  // }
 
   summary = await legalEagle({
     path: appRoot,
