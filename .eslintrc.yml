@@ -12,10 +12,8 @@ settings:
     version: '16.3'
 
 extends:
-  - prettier
-  - prettier/react
   - plugin:@typescript-eslint/recommended
-  - prettier/@typescript-eslint
+  - prettier
 
 rules:
   ##########

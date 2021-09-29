@@ -292,7 +292,7 @@ function copyDependencies() {
   const oldDevDependencies = originalPackage.devDependencies
   const newDevDependencies: PackageLookup = {}
 
-  if (isDevelopmentBuild) {
+  if (isDevelopmentBuild && oldDevDependencies !== undefined) {
     for (const name of Object.keys(oldDevDependencies)) {
       const spec = oldDevDependencies[name]
       if (externals.indexOf(name) !== -1) {
@@ -303,7 +303,7 @@ function copyDependencies() {
 
   // The product name changes depending on whether it's a prod build or dev
   // build, so that we can have them running side by side.
-  const updatedPackage = Object.assign({}, originalPackage, {
+  const updatedPackage: Package = Object.assign({}, originalPackage, {
     productName: getProductName(),
     dependencies: newDependencies,
     devDependencies: newDevDependencies,
