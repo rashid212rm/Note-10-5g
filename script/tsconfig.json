@@ -10,6 +10,7 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
+    "useUnknownInCatchVariables": false,
     "sourceMap": false,
     "noEmit": true,
     "strict": true
