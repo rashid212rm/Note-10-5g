@@ -9,9 +9,13 @@ import {
 import { Octicon } from '../octicons'
 import { getClassNameForCheck, getSymbolForCheck } from './ci-status'
 import classNames from 'classnames'
-import { APICheckConclusion } from '../../lib/api'
 import { Button } from '../lib/button'
 import { encodePathAsUrl } from '../../lib/path'
+import { ActionsLogParser } from '../../lib/actions-log-parser/action-log-parser'
+import {
+  ILogLineTemplateData,
+  IParsedContent,
+} from '../../lib/actions-log-parser/actions-log-parser-objects'
 
 // TODO: Get empty graphic for logs?
 const BlankSlateImage = encodePathAsUrl(
@@ -43,6 +47,8 @@ interface ICICheckRunListItemProps {
 export class CICheckRunListItem extends React.PureComponent<
   ICICheckRunListItemProps
 > {
+  private logGroup: ILogLineTemplateData[] = []
+
   private onCheckRunClick = () => {
     this.props.onCheckRunClick(this.props.checkRun)
   }
@@ -90,14 +96,116 @@ export class CICheckRunListItem extends React.PureComponent<
         </div>
       )
 
-      const log =
-        step.conclusion === APICheckConclusion.Failure ? step.log : null
+      let logs = null
+      if (step.log) {
+        const logParser = new ActionsLogParser(step.log, '')
+        const logLinesTemplateData = logParser.getParsedLogLinesTemplateData()
+        logs = logLinesTemplateData.map((ll, i) =>
+          this.renderLogLine(ll, i, logLinesTemplateData[i + 1]?.inGroup)
+        )
+      }
 
       return (
         <>
           {header}
-          {log}
+          {logs}
         </>
+      )
+    })
+  }
+
+  private renderLogLine(
+    lineData: ILogLineTemplateData,
+    index: number,
+    nextLineDataInGroup: boolean
+  ): JSX.Element | null {
+    if ((lineData.isGroup || lineData.inGroup) && nextLineDataInGroup) {
+      this.logGroup.push(lineData)
+      return null
+    } else if (this.logGroup.length > 0) {
+      this.logGroup.push(lineData)
+      const logGroupSummary = this.logGroup[0]
+      const logGroupBody = this.logGroup.slice(1).map((v, i) => {
+        const cn = classNames('line', v.className)
+        return (
+          <div className={cn} key={i}>
+            <span className="line-number">{v.lineNumber}</span>
+            {this.renderLogLineContentTemplate(v)}
+          </div>
+        )
+      })
+      this.logGroup = []
+
+      const cn = classNames('line', logGroupSummary.className)
+      return (
+        <div className={cn} key={index}>
+          <span className="line-number">{logGroupSummary.lineNumber}</span>
+          <details className="log-group" open={logGroupSummary.groupExpanded}>
+            <summary>
+              {this.renderLogLineContentTemplate(logGroupSummary)}
+            </summary>
+            {logGroupBody}
+          </details>
+        </div>
+      )
+    }
+
+    const cn = classNames('line', lineData.className)
+    return (
+      <div className={cn} key={index}>
+        <span className="line-number">{lineData.lineNumber}</span>
+        {this.renderLogLineContentTemplate(lineData)}
+      </div>
+    )
+  }
+
+  private renderLogLineContentTemplate(
+    lineData: ILogLineTemplateData
+  ): JSX.Element {
+    let contentPrefixClassName: string | undefined
+    let contentPrefixAdj: string | undefined
+
+    if (lineData.isError) {
+      contentPrefixClassName = 'error-text'
+      contentPrefixAdj = 'Error'
+    } else if (lineData.isWarning) {
+      contentPrefixClassName = 'warning-text'
+      contentPrefixAdj = 'Warning'
+    } else if (lineData.isNotice) {
+      contentPrefixClassName = 'notice-text'
+      contentPrefixAdj = 'Notice'
+    }
+
+    return (
+      <span className="line-content">
+        {contentPrefixAdj && contentPrefixClassName ? (
+          <span className={contentPrefixClassName}>{contentPrefixAdj}: </span>
+        ) : null}
+        {this.renderLogLineInnerContent(lineData.lineContent)}
+      </span>
+    )
+  }
+
+  private renderLogLineInnerContent(data: IParsedContent[]): JSX.Element[] {
+    return data.map((d, i) => {
+      const output = d.output.map((v, i) => {
+        return (
+          <span key={i}>
+            {v.entry}
+            {v.entryUrl !== undefined ? (
+              <a target="_blank" rel="noopener noreferrer" href={v.entryUrl}>
+                {v.entryUrl}
+              </a>
+            ) : null}
+            {v.afterUrl}
+          </span>
+        )
+      })
+
+      return (
+        <span key={i}>
+          <span className={classNames(...d.classes)}>{output}</span>
+        </span>
       )
     })
   }
