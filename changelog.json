@@ -1,5 +1,6 @@
 {
   "releases": {
+    "2.9.5-test2": ["[Improved] Bump to Electron v13"],
     "2.9.5-beta3": [
       "[Improved] Warn users when files contain bidirectional Unicode text - #13343",
       "[Improved] Group CI check runs by runner app and event - #13348, #13349, #13344"
