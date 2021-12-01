@@ -284,7 +284,8 @@ import { reorder } from '../git/reorder'
 import { DragAndDropIntroType } from '../../ui/history/drag-and-drop-intro'
 import { UseWindowsOpenSSHKey } from '../ssh/ssh'
 import { isConflictsFlow } from '../multi-commit-operation'
-import { AliveStore } from './alive-store'
+import { IRefCheck } from '../ci-checks/ci-checks'
+import { NotificationsStore } from './notifications-store'
 
 const LastSelectedRepositoryIDKey = 'last-selected-repository-id'
 
@@ -475,7 +476,7 @@ export class AppStore extends TypedBaseStore<IAppState> {
     private readonly pullRequestCoordinator: PullRequestCoordinator,
     private readonly repositoryStateCache: RepositoryStateCache,
     private readonly apiRepositoriesStore: ApiRepositoriesStore,
-    private readonly aliveStore: AliveStore
+    private readonly notificationsStore: NotificationsStore
   ) {
     super()
 
@@ -537,16 +538,9 @@ export class AppStore extends TypedBaseStore<IAppState> {
 
     API.onTokenInvalidated(this.onTokenInvalidated)
 
-    this.aliveStore.onNotificationReceived(e => {
-      const eventData = e.data as any
-
-      const notification = new remote.Notification({
-        title: 'Notification from Alive',
-        body: eventData.reason,
-      })
-
-      notification.show()
-    })
+    this.notificationsStore.onChecksFailedNotification(
+      this.onChecksFailedNotification
+    )
   }
 
   private onTokenInvalidated = (endpoint: string) => {
@@ -1507,6 +1501,8 @@ export class AppStore extends TypedBaseStore<IAppState> {
     // Understanding how many users actually contribute to repos with branch protections gives us
     // insight into who our users are and what kinds of work they do
     this.updateBranchProtectionsFromAPI(repository)
+
+    this.notificationsStore.selectRepository(repository)
 
     return this._selectRepositoryRefreshTasks(
       refreshedRepository,
@@ -6782,6 +6778,52 @@ export class AppStore extends TypedBaseStore<IAppState> {
   public _toggleCIStatusPopover() {
     this.showCIStatusPopover = !this.showCIStatusPopover
     this.emitUpdate()
+  }
+
+  private onChecksFailedNotification = async (
+    repository: RepositoryWithGitHubRepository,
+    pullRequest: PullRequest,
+    commitMessage: string,
+    commitSha: string,
+    checks: ReadonlyArray<IRefCheck>
+  ) => {
+    const selectedRepository =
+      this.selectedRepository ?? (await this._selectRepository(repository))
+
+    const popup: Popup = {
+      type: PopupType.PullRequestChecksFailed,
+      pullRequest,
+      repository,
+      needsSelectRepository: true,
+      commitMessage,
+      commitSha,
+      checks,
+    }
+
+    if (
+      selectedRepository === null ||
+      selectedRepository.hash !== repository.hash
+    ) {
+      return this._showPopup(popup)
+    }
+
+    const state = this.repositoryStateCache.get(repository)
+
+    const { branchesState } = state
+    const { tip } = branchesState
+    const currentBranch = tip.kind === TipState.Valid ? tip.branch : null
+
+    if (currentBranch !== null && currentBranch.name === pullRequest.head.ref) {
+      // If it's the same branch, just show the existing CI check run popover
+      this._setShowCIStatusPopover(true)
+    } else {
+      // If there is no current branch or it's different than the PR branch,
+      // show the checks failed dialog.
+      this._showPopup({
+        ...popup,
+        needsSelectRepository: false,
+      })
+    }
   }
 }
 
